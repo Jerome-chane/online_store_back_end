@@ -44,13 +44,21 @@ public class Product {
         seller.addProduct(this);
     }
 
+    public void setName(String name) { this.name = name; }
+    public void setCategory(String category) { this.category = category; }
+    public void setDescription(String description) { this.description = description; }
+    public void setPrice(Integer price) { this.price = price; }
+    public void addImage(String link){ this.images.add(link); };
+    public void setStock(Integer stock) { this.stock = stock; }
+    
+
     public void updateStock(Integer quantity) { this.stock -= quantity; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+//    public void setQuantity(Integer quantity) { this.quantity = quantity; }
     public Set<Purchase> getPurchases() { return purchases; }
     public void addPurchase(Purchase purchase){ this.purchases.add(purchase);}
     public User getSeller() { return seller;}
     public void setRate(Integer rate) { this.rate = rate; }
-    public void addImage(String link){ this.images.add(link); };
+
     public Long getId() { return id; }
     public String getDescription() { return description; }
     public String getName() { return name; }

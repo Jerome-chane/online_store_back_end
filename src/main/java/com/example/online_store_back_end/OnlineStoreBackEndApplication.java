@@ -45,8 +45,8 @@ public class OnlineStoreBackEndApplication {
 	public CommandLineRunner initData(UserRepository userRepository, ProductRepository productRepository, PurchaseRepository purchaseRepository) {
 		return (args) -> {
 			// save a couple of users
-			com.example.online_store_back_end.User u1 = new com.example.online_store_back_end.User("Jerome","j.com", "seller",passwordEncoder().encode("123"));
-			com.example.online_store_back_end.User u2 = new com.example.online_store_back_end.User("Bob","b.com", "customer",passwordEncoder().encode("123"));
+			com.example.online_store_back_end.User u1 = new com.example.online_store_back_end.User("Jerome","c","j.com", "seller",passwordEncoder().encode("123"));
+			com.example.online_store_back_end.User u2 = new com.example.online_store_back_end.User("Bob","s","b.com", "customer",passwordEncoder().encode("123"));
 
 			userRepository.save(u1);userRepository.save(u2);
 
@@ -107,6 +107,7 @@ class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.antMatchers("/login.html").permitAll()
 				.antMatchers("/login.js").permitAll()
 				.antMatchers("/addProduct").hasAnyAuthority("seller")
+				.antMatchers("/seller/**").hasAnyAuthority("seller")
 				.antMatchers("/purchase").permitAll()
 				.anyRequest()
 				.fullyAuthenticated();

@@ -36,6 +36,40 @@ public class Controller {
         return userRepository.findByEmail(authentication.getName());
     }
 
+    @RequestMapping(value= "/api/editProduct", method = RequestMethod.POST) // add a product
+    public ResponseEntity<Map<String,Object>> editProduct(@RequestBody Product product, Authentication authentication) {
+
+        User user = getAuthPerson(authentication);
+        if (isGuest(authentication) || !user.getRole().contentEquals("seller")) { // Check is the current user is a seller
+            return new ResponseEntity<>(makeMap("error", "You must be logged in as Seller to add a product"), HttpStatus.UNAUTHORIZED);
+        }
+
+        Product repo_product = productRepository.getOne(product.getId()); // finds the corresponding product with id
+
+        if(!repo_product.getSeller().getId().equals(user.getId())){ // check if the product's seller ID matches this user ID
+            return new ResponseEntity<>(makeMap("error", "This product does not belongs to you"), HttpStatus.UNAUTHORIZED);
+        }
+
+        return new ResponseEntity<>(makeMap("success", "Product successfully updated"), HttpStatus.ACCEPTED);
+
+    }
+
+    @RequestMapping(value= "/api/seller/products")
+    public ResponseEntity<Map<String,Object>> getSellerProducts(Authentication authentication) {
+
+        User user = getAuthPerson(authentication);
+        if (isGuest(authentication) || !user.getRole().contentEquals("seller")) { // Check is the current user is a seller
+            return new ResponseEntity<>(makeMap("error", "You must be logged in as Seller to add a product"), HttpStatus.UNAUTHORIZED);
+        }
+        Map<String, Object> dto = new LinkedHashMap<String, Object>();
+        Set<Product> seller_products = user.getProducts(); // gets the Set of the Seller's products
+
+        dto.put("products", seller_products.stream().map(product -> SellerProductsDTO(product)).collect(Collectors.toList()));
+        return new ResponseEntity<>(dto, HttpStatus.ACCEPTED);
+
+    }
+
+
     @RequestMapping(value = "/purchase", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> purchase(@RequestBody Set<Product> products, Authentication authentication) {
 
@@ -51,7 +85,7 @@ public class Controller {
 
         for (Product product : products){
 
-            Product repo_product = productRepository.findByName(product.getName());
+            Product repo_product = productRepository.getOne(product.getId());
             if ((repo_product.getStock() - product.getQuantity()) < 0) { // If the product is out of stock returns forbidden RESPONSE
                 return new ResponseEntity<>(makeMap("error ", product.getName()+" is out of stock"),HttpStatus.FORBIDDEN);
             }
@@ -112,13 +146,14 @@ public class Controller {
     }
     private Map<String, Object> SellerDTO(User seller) {  // makes the Book DTO
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
-        dto.put("name", seller.getName());
+        dto.put("firstName", seller.getFirstName());
+        dto.put("lastName", seller.getLastName());
         dto.put("email", seller.getEmail());
         dto.put("products", seller.getProducts().stream().map(product -> SellerProductsDTO(product)));
 
         return dto;
     }
-    private Map<String, Object> SellerProductsDTO(Product product) {  // makes the Book DTO
+    private Map<String, Object> SellerProductsDTO(Product product) {
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         dto.put("id", product.getId());
         dto.put("name", product.getName());
@@ -133,7 +168,8 @@ public class Controller {
     }
     private Map<String, Object> CustomerDTO(User customer) {
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
-        dto.put("name", customer.getName());
+        dto.put("firstName", customer.getFirstName());
+        dto.put("lastName", customer.getLastName());
         dto.put("email", customer.getEmail());
         dto.put("purchases", customer.getPurchases().stream().map(purchase ->PurchaseDTO(purchase)));
         return dto;
@@ -184,7 +220,8 @@ public class Controller {
     };
     private Map<String, Object> CustomerPurchaseDTO(User customer) {
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
-        dto.put("name", customer.getName());
+        dto.put("firstName", customer.getFirstName());
+        dto.put("lastName", customer.getLastName());
         dto.put("email", customer.getEmail());
         return dto;
     }
@@ -225,7 +262,8 @@ public class Controller {
     private Map<String, Object> ProductSellerDTO(User user) {  // makes the Book DTO
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         dto.put("id",user.getId());
-        dto.put("name", user.getName());
+        dto.put("firstName", user.getFirstName());
+        dto.put("lastName", user.getLastName());
 
         return dto;
     }
@@ -233,7 +271,8 @@ public class Controller {
         Map<String, Object> dto = new LinkedHashMap<String, Object>();
         User user = getAuthPerson(authentication);
         if(user != null) {
-            dto.put("name", userRepository.findByEmail(authentication.getName()).getName());
+            dto.put("firstName", userRepository.findByEmail(authentication.getName()).getFirstName());
+            dto.put("lastName", userRepository.findByEmail(authentication.getName()).getLastName());
             dto.put("email", userRepository.findByEmail(authentication.getName()).getEmail());
             dto.put("role",userRepository.findByEmail(authentication.getName()).getRole());
         }
@@ -241,7 +280,7 @@ public class Controller {
     }
 
     @RequestMapping(value= "/api/addProduct", method = RequestMethod.POST) // add a product
-    public ResponseEntity<Map<String,Object>> newBook(@RequestBody Product product, Authentication authentication) {
+    public ResponseEntity<Map<String,Object>> addProduct(@RequestBody Product product, Authentication authentication) {
 
         User user = getAuthPerson(authentication);
 //        System.out.println(user.getRole());
@@ -268,7 +307,7 @@ public class Controller {
         if (isPerson != null) {
             return new ResponseEntity<>(makeMap("error","Person already exists"),HttpStatus.CONFLICT);
         }
-        User newUser = new User(user.getName(),user.getEmail(),user.getRole(),passwordEncoder.encode(user.getPassword()));
+        User newUser = new User(user.getFirstName(),user.getLastName(),user.getEmail(),user.getRole(),passwordEncoder.encode(user.getPassword()));
         userRepository.save(newUser);
         return new ResponseEntity<>(makeMap("success","Person Added"),HttpStatus.CREATED);
     }

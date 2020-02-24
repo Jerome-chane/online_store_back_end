@@ -13,7 +13,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
     private Long id;
-    private String name;
+    private String firstName;
+    private String lastName;
     private String email;
     private String password;
     private String role;
@@ -26,8 +27,9 @@ public class User {
 
     public User() { }
 
-    public User(String name, String email, String role, String password) {
-        this.name = name;
+    public User(String firstName, String lastName ,String email, String role, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.role = role;
@@ -38,10 +40,9 @@ public class User {
         return id;
     }
     public String getRole() { return role; }
-    public String getName() { return name; }
-    public String getEmail() {
-        return email;
-    }
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
+    public String getEmail() { return email; }
     public String getPassword() { return password; }
     public Set<Product> getProducts() { return products; }
     public Set<Purchase> getPurchases() { return purchases; }
@@ -67,7 +68,7 @@ public class User {
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
+                ", name='" + firstName + '\'' +
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
                 '}';
