@@ -50,23 +50,31 @@ public class Controller {
         Integer totalPrice = 0;
 
         for (Product product : products){
-            Integer freeUnits = 0;
-            productSet.add(productRepository.findByName(product.getName())); // add the purchased products in the set
-            quantities.add(productRepository.findByName(product.getName()).toString()+" quantity:"+product.getQuantity().toString());
+
+            Product repo_product = productRepository.findByName(product.getName());
+            if ((repo_product.getStock() - product.getQuantity()) < 0) { // If the product is out of stock returns forbidden RESPONSE
+                return new ResponseEntity<>(makeMap("error ", product.getName()+" is out of stock"),HttpStatus.FORBIDDEN);
+            }
+            if ((repo_product.getStock() - product.getQuantity()) >= 0){
+                Integer freeUnits = 0;
+            productSet.add(repo_product); // add the purchased products in the set
+            quantities.add(repo_product.toString()+" quantity:"+product.getQuantity().toString());
             // create a "quantities" string with the matching item ant its quantity
+
             if(product.getQuantity()>=4){
                 freeUnits = Math.round(product.getQuantity()/4); // if set the "free" value = to 1 each time there are more than 4 products
                 discount = discount+ product.getName() + " : "+ freeUnits.toString()+ " free, ";
             }
             totalPrice += product.getPrice()*(product.getQuantity()-freeUnits); // total price is calculated based on each items price, quantity and free unites
+            repo_product.updateStock(product.getQuantity()); // update the product's stock (substract the quantity)
+            }
         }
+
         List<Map<String,String>> items = new ArrayList<>();
         quantities.forEach(item->items.add(convert(item)));// convert the quanties string to a List of maps
-//        items.forEach(item->{ System.out.println(item.get("name")+" "+item.get("quantity"));
-
-//        });
         Purchase newPurchase = new Purchase(productSet,quantities,discount,totalPrice,customer,date);
         purchaseRepository.save(newPurchase);
+
         return new ResponseEntity<>(makeMap("success","Purchase realized"),HttpStatus.CREATED);
     }
 
@@ -236,7 +244,7 @@ public class Controller {
     public ResponseEntity<Map<String,Object>> newBook(@RequestBody Product product, Authentication authentication) {
 
         User user = getAuthPerson(authentication);
-        System.out.println(user.getRole());
+//        System.out.println(user.getRole());
         if (isGuest(authentication) || !user.getRole().contentEquals("seller")) { // Check is the current user is a seller
             return new ResponseEntity<>(makeMap("error", "You must be logged in as Seller to add a product"), HttpStatus.UNAUTHORIZED);
         }

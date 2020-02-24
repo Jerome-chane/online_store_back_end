@@ -44,6 +44,7 @@ public class Product {
         seller.addProduct(this);
     }
 
+    public void updateStock(Integer quantity) { this.stock -= quantity; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
     public Set<Purchase> getPurchases() { return purchases; }
     public void addPurchase(Purchase purchase){ this.purchases.add(purchase);}

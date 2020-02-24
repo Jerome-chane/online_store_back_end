@@ -81,7 +81,6 @@ UserRepository userRepository;
 	@Override
 	public void init(AuthenticationManagerBuilder auth) throws Exception {
 		auth.userDetailsService(inputName-> {
-
 			com.example.online_store_back_end.User user = userRepository.findByEmail(inputName);
 			if (user != null) {
 				return new User(user.getEmail(), user.getPassword(),
